@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Record - Watch Information System</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body data-page="form">
+  <header class="site-header">
+    <nav class="nav">
+      <a class="logo" href="index.html">Watch Information System</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="products.html">Watch Records</a>
+        <a class="active" href="product-form.html">Add Record</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="page-heading">
+      <div>
+        <h1 id="formTitle">Add Watch Record</h1>
+        <p>This is a sample form for the static prototype.</p>
+      </div>
+    </div>
+
+    <form class="form-box" id="watchForm">
+      <div class="form-group">
+        <label for="name">Watch Name</label>
+        <input id="name" name="name" type="text" required>
+      </div>
+
+      <div class="form-group">
+        <label for="brand">Brand</label>
+        <input id="brand" name="brand" type="text" required>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+          <option value="">Select a category</option>
+          <option value="Classic">Classic</option>
+          <option value="Sport">Sport</option>
+          <option value="Luxury">Luxury</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="price">Price</label>
+        <input id="price" name="price" type="number" min="1" required>
+      </div>
+
+      <div class="form-group">
+        <label for="image">Image URL</label>
+        <input id="image" name="image" type="url" placeholder="https://example.com/watch.jpg">
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" required></textarea>
+      </div>
+
+      <p class="message">Demo only: this form does not save information.</p>
+      <div class="form-actions">
+        <button class="button" type="submit" id="saveButton">Save Record</button>
+        <a class="button button-secondary" href="products.html">Cancel</a>
+      </div>
+    </form>
+  </main>
+
+  <footer class="footer">Watch Information System - Web Development Project</footer>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
