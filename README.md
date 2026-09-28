@@ -3,7 +3,7 @@
 Basic CRUD using Express and XAMPP MySQL.
 
 1. Start **MySQL** in XAMPP.
-2. Run `npm start`.
+2. Run `npm run dev`.
 3. Open **http://127.0.0.1:3000**.
 
 Add, view, edit, and delete watches on the website. Changes are saved in `basic_watch_shop.watches`. Your SQL file has already been imported.
