@@ -1,157 +1,151 @@
-// These are the three fixed records used by the static website.
-const watches = [
-  {
-    id: 1,
-    name: "Classic Leather",
-    brand: "Timex",
-    category: "Classic",
-    price: 120,
-    image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=700&q=80",
-    description: "A simple classic watch with a brown leather strap."
-  },
-  {
-    id: 2,
-    name: "Silver Sport",
-    brand: "Casio",
-    category: "Sport",
-    price: 180,
-    image: "https://images.unsplash.com/photo-1547996160-81dfa63595aa?auto=format&fit=crop&w=700&q=80",
-    description: "A strong everyday watch with a silver metal band."
-  },
-  {
-    id: 3,
-    name: "Gold Edition",
-    brand: "Fossil",
-    category: "Luxury",
-    price: 350,
-    image: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=700&q=80",
-    description: "An elegant gold watch made for special occasions."
-  }
-];
-
-// Read the watch ID from the page URL.
-function getWatchId() {
-  const parameters = new URLSearchParams(window.location.search);
-  return Number(parameters.get("id"));
+const apiUrl = '/api/watches';
+const watchId = new URLSearchParams(location.search).get('id');
+const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+})[character]);
+function formatPrice(value) {
+  return Number(value).toFixed(2);
 }
 
-// Create the HTML for one record card.
+// Send requests to the Express API.
+async function request(method = 'GET', id = null, data = null) {
+  const response = await fetch(apiUrl + (id !== null ? `/${encodeURIComponent(id)}` : ''), {
+    method,
+    headers: data ? { 'Content-Type': 'application/json' } : {},
+    body: data ? JSON.stringify(data) : undefined
+  });
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error('Cannot reach the API. Make sure the Node.js server is running.');
+  }
+  if (!response.ok) throw new Error(result.error || 'The request failed.');
+  return result;
+}
+
+function showError(error) {
+  let message = document.getElementById('pageMessage');
+  if (!message) {
+    message = document.createElement('p');
+    message.id = 'pageMessage';
+    message.className = 'message';
+    message.setAttribute('role', 'alert');
+    document.querySelector('main').prepend(message);
+  }
+  message.textContent = error.message;
+}
+
+function imageMarkup(watch) {
+  return /^https?:\/\//i.test(watch.image)
+    ? `<img class="watch-image" src="${escapeHtml(watch.image)}" alt="${escapeHtml(watch.name)}">` : '';
+}
+
 function createWatchCard(watch, showActions = false) {
-  let actions = "";
+  const id = encodeURIComponent(watch.id);
+  return `<article class="watch-card">
+    <a href="product-details.html?id=${id}">${imageMarkup(watch)}</a>
+    <div class="watch-card-content">
+      <h3><a href="product-details.html?id=${id}">${escapeHtml(watch.name)}</a></h3>
+      <p>${escapeHtml(watch.brand)} &middot; ${escapeHtml(watch.category)}</p>
+      <p class="price">$${formatPrice(watch.price)}</p>
+      ${showActions ? `<div class="card-actions">
+        <a class="button small-button" href="product-details.html?id=${id}">View</a>
+        <a class="button button-secondary small-button" href="product-form.html?id=${id}">Edit</a>
+        <button class="button button-danger small-button" data-delete="${id}">Delete</button>
+      </div>` : ''}
+    </div></article>`;
+}
 
-  if (showActions) {
-    actions = `
-      <div class="card-actions">
-        <a class="button small-button" href="product-details.html?id=${watch.id}">View</a>
-        <a class="button button-secondary small-button" href="product-form.html?id=${watch.id}">Edit</a>
-        <button class="button button-danger small-button delete-button">Delete</button>
-      </div>
-    `;
+// Delete a record after confirmation.
+async function deleteWatch(id, button) {
+  if (!confirm('Delete this watch permanently?')) return;
+  button.disabled = true;
+  try {
+    await request('DELETE', id);
+    location.href = 'products.html';
+  } catch (error) {
+    showError(error);
+    button.disabled = false;
   }
-
-  return `
-    <article class="watch-card">
-      <a href="product-details.html?id=${watch.id}">
-        <img class="watch-image" src="${watch.image}" alt="${watch.name}">
-      </a>
-      <div class="watch-card-content">
-        <h3>
-          <a href="product-details.html?id=${watch.id}">${watch.name}</a>
-        </h3>
-        <p>${watch.brand} · ${watch.category}</p>
-        <p class="price">$${watch.price}</p>
-        ${actions}
-      </div>
-    </article>
-  `;
 }
 
-// Display the three records on the home page.
-function loadHomePage() {
-  const featuredArea = document.getElementById("featuredWatches");
-  featuredArea.innerHTML = watches.map(watch => createWatchCard(watch)).join("");
-}
-
-// Display the same three records on the records page.
-function loadProductsPage() {
-  const watchList = document.getElementById("watchList");
-  watchList.innerHTML = watches
-    .map(watch => createWatchCard(watch, true))
-    .join("");
-
-  // Delete is shown as an example but does not remove anything.
-  const deleteButtons = document.querySelectorAll(".delete-button");
-
-  deleteButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      alert("This is a static prototype. The record was not deleted.");
+// Load watches from MySQL for the home and records pages.
+async function loadList(home = false) {
+  const area = document.getElementById(home ? 'featuredWatches' : 'watchList');
+  area.textContent = 'Loading watches...';
+  try {
+    const watches = await request();
+    const visible = home ? watches.slice(0, 3) : watches;
+    area.innerHTML = visible.length ? visible.map(watch => createWatchCard(watch, !home)).join('')
+      : '<p class="message">No watches yet. Add a record to get started.</p>';
+    area.querySelectorAll('[data-delete]').forEach(button => {
+      button.addEventListener('click', () => deleteWatch(button.dataset.delete, button));
     });
-  });
+  } catch (error) {
+    area.textContent = '';
+    throw error;
+  }
 }
 
-// Show the selected record on the details page.
-function loadDetailsPage() {
-  const watchId = getWatchId();
-  const watch = watches.find(item => item.id === watchId);
-  const detailsArea = document.getElementById("watchDetails");
-
-  if (!watch) {
-    detailsArea.innerHTML = '<div class="message">Watch record not found.</div>';
-    return;
-  }
-
-  detailsArea.innerHTML = `
-    <article class="details">
-      <img class="watch-image" src="${watch.image}" alt="${watch.name}">
-      <div>
-        <h1>${watch.name}</h1>
-        <p class="price">$${watch.price}</p>
-        <p class="details-description">${watch.description}</p>
-        <ul class="details-list">
-          <li><strong>Record ID:</strong> ${watch.id}</li>
-          <li><strong>Brand:</strong> ${watch.brand}</li>
-          <li><strong>Category:</strong> ${watch.category}</li>
-        </ul>
-        <div class="card-actions">
-          <a class="button" href="product-form.html?id=${watch.id}">Edit Record</a>
-          <button class="button button-danger" id="deleteWatch">Delete Record</button>
-        </div>
-      </div>
-    </article>
-  `;
-
-  document.getElementById("deleteWatch").addEventListener("click", () => {
-    alert("This is a static prototype. The record was not deleted.");
-  });
+// Display the selected watch.
+async function loadDetails() {
+  if (!watchId) throw new Error('A watch ID is required.');
+  const watch = await request('GET', watchId);
+  document.getElementById('watchDetails').innerHTML = `<article class="details">
+    ${imageMarkup(watch)}<div>
+    <h1>${escapeHtml(watch.name)}</h1><p class="price">$${formatPrice(watch.price)}</p>
+    <p class="details-description">${escapeHtml(watch.description)}</p>
+    <ul class="details-list">
+      <li><strong>Record ID:</strong> ${escapeHtml(watch.id)}</li>
+      <li><strong>Brand:</strong> ${escapeHtml(watch.brand)}</li>
+      <li><strong>Category:</strong> ${escapeHtml(watch.category)}</li>
+    </ul><div class="card-actions">
+      <a class="button" href="product-form.html?id=${encodeURIComponent(watch.id)}">Edit Record</a>
+      <button class="button button-danger" id="deleteWatch">Delete Record</button>
+    </div></div></article>`;
+  const button = document.getElementById('deleteWatch');
+  button.addEventListener('click', () => deleteWatch(watch.id, button));
 }
 
-// Fill the sample form when the Edit button is clicked.
-function loadFormPage() {
-  const form = document.getElementById("watchForm");
-  const watchId = getWatchId();
-  const watch = watches.find(item => item.id === watchId);
-
-  if (watch) {
-    document.getElementById("formTitle").textContent = "Edit Watch Record";
-    document.getElementById("saveButton").textContent = "Update Record";
-    form.elements.name.value = watch.name;
-    form.elements.brand.value = watch.brand;
-    form.elements.category.value = watch.category;
-    form.elements.price.value = watch.price;
-    form.elements.image.value = watch.image;
-    form.elements.description.value = watch.description;
-  }
-
-  form.addEventListener("submit", event => {
+// Use the same form for adding and editing watches.
+async function loadForm() {
+  const form = document.getElementById('watchForm');
+  const button = document.getElementById('saveButton');
+  let ready = false;
+  button.disabled = true;
+  form.addEventListener('submit', async event => {
     event.preventDefault();
-    alert("This is a static prototype. The information was not saved.");
+    if (!ready || button.disabled) return;
+    button.disabled = true;
+    try {
+      const result = await request(watchId !== null ? 'PUT' : 'POST', watchId, Object.fromEntries(new FormData(form)));
+      location.href = `product-details.html?id=${encodeURIComponent(result.id)}`;
+    } catch (error) {
+      showError(error);
+      button.disabled = false;
+    }
   });
+  if (watchId !== null) {
+    if (!/^[1-9]\d*$/.test(watchId)) throw new Error('Invalid watch ID.');
+    const watch = await request('GET', watchId);
+    document.getElementById('formTitle').textContent = 'Edit Watch Record';
+    button.textContent = 'Update Record';
+    for (const field of ['name', 'brand', 'category', 'price', 'image', 'description']) {
+      form.elements[field].value = watch[field];
+    }
+  }
+  ready = true;
+  button.disabled = false;
 }
 
-// Run the correct function for the current page.
-const currentPage = document.body.dataset.page;
+// Load the current page.
+async function loadPage() {
+  const page = document.body.dataset.page;
+  if (page === 'home') await loadList(true);
+  if (page === 'products') await loadList();
+  if (page === 'details') await loadDetails();
+  if (page === 'form') await loadForm();
+}
 
-if (currentPage === "home") loadHomePage();
-if (currentPage === "products") loadProductsPage();
-if (currentPage === "details") loadDetailsPage();
-if (currentPage === "form") loadFormPage();
+loadPage().catch(showError);

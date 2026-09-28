@@ -22,19 +22,19 @@
     <div class="page-heading">
       <div>
         <h1 id="formTitle">Add Watch Record</h1>
-        <p>This is a sample form for the static prototype.</p>
+        <p>Enter the watch details below.</p>
       </div>
     </div>
 
     <form class="form-box" id="watchForm">
       <div class="form-group">
         <label for="name">Watch Name</label>
-        <input id="name" name="name" type="text" required>
+        <input id="name" name="name" maxlength="150" type="text" required>
       </div>
 
       <div class="form-group">
         <label for="brand">Brand</label>
-        <input id="brand" name="brand" type="text" required>
+        <input id="brand" name="brand" maxlength="100" type="text" required>
       </div>
 
       <div class="form-group">
@@ -49,20 +49,20 @@
 
       <div class="form-group">
         <label for="price">Price</label>
-        <input id="price" name="price" type="number" min="1" required>
+        <input id="price" name="price" type="number" min="0" max="99999999.99" step="0.01" required>
       </div>
 
       <div class="form-group">
         <label for="image">Image URL</label>
-        <input id="image" name="image" type="url" placeholder="https://example.com/watch.jpg">
+        <input id="image" name="image" maxlength="2048" type="url" placeholder="https://example.com/watch.jpg">
       </div>
 
       <div class="form-group">
         <label for="description">Description</label>
-        <textarea id="description" name="description" required></textarea>
+        <textarea id="description" name="description" maxlength="16000" required></textarea>
       </div>
 
-      <p class="message">Demo only: this form does not save information.</p>
+
       <div class="form-actions">
         <button class="button" type="submit" id="saveButton">Save Record</button>
         <a class="button button-secondary" href="products.html">Cancel</a>

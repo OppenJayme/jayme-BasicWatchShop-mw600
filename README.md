@@ -1,27 +1,17 @@
-# Watch Information System
+# Basic Watch Shop
 
-A simple beginner web development project made with HTML, CSS, JavaScript, and Vite.
+Basic CRUD using Express and XAMPP MySQL.
 
-The website shows the user interface of an information system:
+1. Start **MySQL** in XAMPP.
+2. Run `npm start`.
+3. Open **http://127.0.0.1:3000**.
 
-- View watch records
-- Search records
-- Add a new record
-- Edit an existing record
-- Delete a record
+Add, view, edit, and delete watches on the website. Changes are saved in `basic_watch_shop.watches`. Your SQL file has already been imported.
 
-The project contains three fixed watch records. The CRUD buttons are only interface examples and do not change data. There is no backend, API, database, or local storage.
+- `server.js`: database connection and CRUD routes.
+- `js/app.js`: displays watches and sends form data to Express.
+- `basic_watch_shop.sql`: database table and sample watches.
 
-## Pages
+The connection defaults to XAMPP's `root` user with no password. If your settings differ, copy `.env.example` to `.env` and edit it.
 
-- index.html - home page and recent records
-- products.html - list of watch records
-- product-form.html - add and edit form
-- product-details.html - view one record
-
-## Run the project
-
-```bash
-npm install
-npm run dev
-```
+For Vite, keep Express running and use `npm run dev` in a second terminal.
